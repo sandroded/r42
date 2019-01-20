@@ -87,22 +87,22 @@ resource "aws_alb_listener" "web_listener" {
   port              = 443  
   protocol          = "HTTPS"
   ssl_policy        = "ELBSecurityPolicy-2016-08"
-  certificate_arn   = "${aws_iam_server_certificate.cert.arn}"
-  
+  # certificate_arn   = "${aws_iam_server_certificate.cert.arn}"
+  certificate_arn   = "${aws_acm_certificate_validation.cert_validation.certificate_arn}"
   default_action {    
     target_group_arn = "${aws_alb_target_group.web.arn}"
     type             = "forward"  
   }
 }
-resource "aws_iam_server_certificate" "cert" {
-  name             = "test_cert"
-  certificate_body = "${var.certificate_body}"
-  private_key      = "${var.private_key}"
-  certificate_chain = "${var.certificate_chain}"
-  lifecycle {
-    create_before_destroy = true
-  }
-}
+# resource "aws_iam_server_certificate" "cert" {
+#   name             = "test_cert"
+#   certificate_body = "${var.certificate_body}"
+#   private_key      = "${var.private_key}"
+#   certificate_chain = "${var.certificate_chain}"
+#   lifecycle {
+#     create_before_destroy = true
+#   }
+# }
 
 # Create a new ALB Target Group attachment
 resource "aws_autoscaling_attachment" "web-attachment" {
@@ -111,11 +111,22 @@ resource "aws_autoscaling_attachment" "web-attachment" {
 }
 
 // Proxied Cloudflare record to hide infra details. 
-resource "cloudflare_record" "dns_record" {
-    domain = "${var.domain}"
-    name   = "${var.dns_name}"
-    value  = "${aws_alb.cluster-alb.dns_name}"
-    type   = "CNAME"
-    ttl    = 1
-    proxied = true
+# resource "cloudflare_record" "dns_record" {
+#     domain = "${var.domain}"
+#     name   = "${var.dns_name}"
+#     value  = "${aws_alb.cluster-alb.dns_name}"
+#     type   = "CNAME"
+#     ttl    = 1
+#     proxied = true
+# }
+data "aws_route53_zone" "primary" {
+  name         = "${var.domain}."
+  # private_zone = true
+}
+resource "aws_route53_record" "alb" {
+  zone_id = "${data.aws_route53_zone.primary.zone_id}"
+  name    = "${var.dns_name}.${var.domain}"
+  type    = "CNAME"
+  ttl     = "300"
+  records = ["${aws_alb.cluster-alb.dns_name}"]
 }
