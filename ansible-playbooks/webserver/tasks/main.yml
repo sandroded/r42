@@ -1,0 +1,64 @@
+---
+# tasks file for webserver
+- name: install python 2
+  raw: test -e /usr/bin/python || (apt -y update && apt install -y python-minimal)
+- name: Install required packages
+  apt:
+    name: ['openjdk-8-jdk', 'git']
+    state: present
+    update_cache: yes
+  # become: true
+
+- name: Ensure group appuser exists
+  group:
+    name: "{{user}}"
+    state: present
+
+- name: Ensure user appuser exists
+  user:
+    name: "{{user}}"
+    state: present
+    comment: "web-app user"
+    group: "{{user}}"
+
+- name: Git clone web-app
+  git:
+    repo: "{{ git_url }}"
+    dest: "{{ working_dir }}"
+  tags: current
+
+- name: Change permissions for webapp folder
+  file:
+    path: "{{ working_dir }}"
+    state: directory
+    owner: "{{user}}"
+    group: "{{user}}"
+    mode: 0700
+    recurse: yes
+  become: yes
+
+- name: Transfer the service config file
+  template:
+    src: r42service.j2
+    dest: "{{dest_service_path}}"
+    owner: root
+    group: root
+    mode: 0700
+  tags: current
+
+- name: Enable service r42, and not touch the state
+  service:
+    name: "{{service_name}}"
+    enabled: yes
+  tags: current
+
+- name: Start service r42
+  service:
+    name: "{{service_name}}"
+    state: started
+  tags: current
+
+- name: Wait for port 8080 to become open on the host, don't start checking for 10 seconds
+  wait_for:
+    port: 8080
+    delay: 10

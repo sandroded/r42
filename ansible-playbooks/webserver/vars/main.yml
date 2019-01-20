@@ -1,0 +1,8 @@
+---
+# vars file for webserver
+user: "appuser"
+git_url: "https://github.com/lc-nyovchev/opstest"
+
+working_dir: "/home/{{user}}/opstest"
+service_name: "r42.service"
+dest_service_path: "/etc/systemd/system/{{service_name}}"

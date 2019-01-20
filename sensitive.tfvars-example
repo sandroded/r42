@@ -1,0 +1,11 @@
+#personal
+aws-akey = "<aws key ID>"
+aws-skey = "<aws key value>"
+
+corporate_subnet = ["0.0.0.0/0"]
+
+cf-email = "<cloudflare email>"
+cf-token = "<cloudflare token>"
+
+dns_name = "<dns subdomain>"
+domain = "<dns domain>"

@@ -1,0 +1,10 @@
+[Unit]
+Description=r42app
+After=syslog.target
+
+[Service]
+User={{user}}
+ExecStart={{working_dir}}/mvnw spring-boot:run -Dspring.config.location={{working_dir}}/application.properties
+WorkingDirectory={{working_dir}}
+[Install]
+WantedBy=multi-user.target
